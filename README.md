@@ -48,8 +48,7 @@ You can learn more in the [Create React App documentation](https://facebook.gith
 To learn React, check out the [React documentation](https://reactjs.org/).
 
 # Frontend my_nft_client live link
-https://withered-bonus-9446.on.fleek.co/
-
+https://tight-frost-6414.on.fleek.co/
 
 # Backend nft_marketplace
 
