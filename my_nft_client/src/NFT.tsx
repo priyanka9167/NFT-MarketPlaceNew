@@ -3,6 +3,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom';
 import NFTCollection from './utils/NFTCollection.json';
+import TokenContract from './utils/Token.json';
 import { getSigner, getContract } from './ether_utils';
 
 
@@ -10,7 +11,8 @@ import { getSigner, getContract } from './ether_utils';
 interface CollectionItem {
     id: number;
     owner: `0x${string}`;
-    uri: string
+    uri: string;
+    price: BigInt;
 }
 
 
@@ -20,7 +22,10 @@ export default function NFT() {
     const [fileImg, setFileImg] = useState(null);
     const [nftAddress, setNftAddress] = useState(null);
     const [nftImageCollection, setNftImageCollection] = useState<CollectionItem[]>([]);
+    const [price, setPrice] = useState<number>(0);
+
     // const [signer, setSigner] = useState<any>(null);
+    const tokenAddress = process.env.REACT_APP_TOKEN_CONTRACT_ADDRESS as `0x${string}` | undefined;
 
 
 
@@ -47,11 +52,12 @@ export default function NFT() {
                 console.log("NFT Address==>", nftAddress);
                 const signer = await getSigner();
                 const collection_contract = getContract(nftAddress, NFTCollection.abi, signer);
-                let response_nft = await collection_contract.createNFT(ImgHash);
+                let response_nft = await collection_contract.createNFT(ImgHash, price);
                 let new_nft = {
                     id: nftImageCollection.length + 1,
                     owner: '0xa0Ee7A142d267C1f36714E4a8F75612F20a79720' as `0x${string}`,
-                    uri: ImgHash
+                    uri: ImgHash,
+                    price: BigInt(price)
                 }
                 setNftImageCollection(prevState => [...prevState, new_nft]);
 
@@ -68,11 +74,14 @@ export default function NFT() {
             try {
                 const signer = await getSigner();
                 const collection_contract = getContract(nftAddress, NFTCollection.abi, signer);
+
                 let response_all_nfts = await collection_contract.getNFTsInCollection();
+                console.log("response_all_nfts", response_all_nfts);
                 const formattedCollections: CollectionItem[] = response_all_nfts.map((collection: any) => ({
                     id: collection[0],
                     owner: collection[1],
                     uri: collection[2],
+                    price: collection[3]
                 }));
 
                 console.log("formattedCollections", formattedCollections);
@@ -82,6 +91,24 @@ export default function NFT() {
             }
         }
     };
+
+
+
+    const buyNFT = async (nft_id: any) => {
+        try {
+            const signer = await getSigner();
+            console.log("signer address", signer?.address, nftAddress)
+            const token_contract = getContract(tokenAddress, TokenContract.abi, signer);
+            await token_contract.approve(nftAddress, 500);
+            console.log("Tokens approved!", Number(nft_id));
+            const collection_contract = getContract(nftAddress, NFTCollection.abi, signer);
+            await collection_contract.buyNFT(Number(nft_id));
+        }
+        catch (e) {
+            console.log(e)
+        }
+
+    }
 
     useEffect(() => {
         const init = async () => {
@@ -113,15 +140,28 @@ export default function NFT() {
     return (
         <div style={{ marginTop: 10, textAlign: 'center' }}>
             <form onSubmit={handleUploadClick}>
-                <input
-                    accept="image/*"
-                    id="contained-button-file"
-                    multiple
-                    type="file"
-                    onChange={(e: any) => setFileImg(e.target.files[0])}
-                    placeholder=''
-                    required
-                />
+                <div style={{ marginBottom: '16px' }}>
+                    <input
+                        accept="image/*"
+                        id="contained-button-file"
+                        multiple
+                        type="file"
+                        onChange={(e: any) => setFileImg(e.target.files[0])}
+                        placeholder=''
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="number-input">Enter a number: </label>
+
+                    <input
+                        id="number-input"
+                        type="number"
+                        onChange={(e: any) => setPrice(e.target.value)}
+                        placeholder=''
+                        required
+                    />
+                </div>
                 <Button
                     variant="contained"
                     color="primary"
@@ -132,36 +172,46 @@ export default function NFT() {
                 </Button>
             </form>
             <div>
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', mt: 20 }}>
-                    <Box sx={{
-                        display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 4, flexWrap: 'wrap', gap: 2, // space between items
-
-                    }}>
-                        {nftImageCollection.map((element, index) => (
-                            <Paper
-                                key={index}
-                                elevation={3}
-                                sx={{
-                                    width: '300px',
-                                    height: '300px', // Ensure fixed height
-                                    padding: '16px',
-                                    margin: '8px 0',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <img
-                                    src={element.uri}
-                                    alt={`NFT ${index}`}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} // Maintain aspect ratio and cover the container
-                                />
-                            </Paper>
-
-
-                        ))}
-                    </Box>
-                </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', mt: 20 }}>
+            <Box sx={{
+                display: 'flex', flexDirection: 'row', alignItems: 'center', mt: 4, flexWrap: 'wrap', gap: 2,
+            }}>
+                {nftImageCollection.map((element, index) => (
+                    <Paper
+                        key={index}
+                        elevation={3}
+                        sx={{
+                            width: '300px',
+                            height: '400px', // Adjusted height to accommodate additional content
+                            padding: '16px',
+                            margin: '8px 0',
+                            display: 'flex',
+                            flexDirection: 'column', // Ensure vertical stacking
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <img
+                            src={element.uri}
+                            alt={`NFT ${index}`}
+                            style={{ width: '100%', height: '60%', objectFit: 'cover' }} // Adjust height percentage as needed
+                        />
+                        <div style={{ textAlign: 'center', marginTop: '16px' }}>Price: {Number(element.price)}</div>
+                        <div style={{ textAlign: 'center', wordWrap: 'break-word', width: '100%' }}>
+                            Owner: {element.owner}
+                        </div>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => buyNFT(element.id)}
+                            sx={{ mt: 2 }}
+                        >
+                            Buy NFT
+                        </Button>
+                    </Paper>
+                ))}
+            </Box>
+        </Box>
             </div>
         </div>
 

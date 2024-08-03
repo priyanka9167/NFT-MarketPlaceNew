@@ -55,7 +55,7 @@ cast send 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 "createNFT(string)" "www.me
 
 Get all NFTS from collection 
 
-cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getNFTsInCollection()((uint256,address,string)[])" --rpc-url http://127.0.0.1:8545
+cast call 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 "getNFTsInCollection()((uint256,address,string)[])" --rpc-url http://127.0.0.1:8545
 
 
 
@@ -63,15 +63,25 @@ cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getNFTsInCollection()((uin
 
  Deploy Marketplace 
 
-forge create --rpc-url https://sepolia.infura.io/v3/f62d1e178f134982940c6071ad3b4c70 --private-key f98918409590a35abea6305c9795c757a007aa1dd05fdfceeed57c0f91c81df5 src/NFTMarketplace.sol:NFTMarketplace --constructor-args "collectionManager" "CM"
+forge create --rpc-url https://sepolia.infura.io/v3/f62d1e178f134982940c6071ad3b4c70 --private-key 87f7ef8d9106fade7a168ab0e9272780ef74bdcdca904fe1b95fca0213fee0b9 src/NFTMarketplace.sol:NFTMarketplace --constructor-args "collectionManager" "CM"
 
- Deployed on - 0xF5A1Fb660322fb5A5977D9316fAb2FF2038098E7
+Deployed on - 0x57E3294D70Fc3bb2765af1A975BEA84115a322C2
 
 
 
- Deploy Collection 
+Deploy Token
 
-forge create --rpc-url https://sepolia.infura.io/v3/f62d1e178f134982940c6071ad3b4c70 --private-key f98918409590a35abea6305c9795c757a007aa1dd05fdfceeed57c0f91c81df5 src/NFTCollection.sol:NFTCollection --constructor-args "My First collection" "First"
+
+forge create --rpc-url https://sepolia.infura.io/v3/f62d1e178f134982940c6071ad3b4c70 --private-key 87f7ef8d9106fade7a168ab0e9272780ef74bdcdca904fe1b95fca0213fee0b9 src/Token.sol:Token --constructor-args "100000"
+
+Deployed on - 0x5fCC9a5BE3a0cf0DdB647f7a1Ba71Fd6B45E4066
+
+
+Deploy 
+
+Deploy Collection 
+
+forge create --rpc-url https://sepolia.infura.io/v3/f62d1e178f134982940c6071ad3b4c70 --private-key ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 src/NFTCollection.sol:NFTCollection --constructor-args "My First collection" "First"
 
 Deployed on - 0xF58F38DC555F24D42c9a308Ab2B71B67A556C2e6
 

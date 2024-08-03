@@ -55,4 +55,4 @@ cast send 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 "createNFT(string)" "www.me
 
 Get all NFTS from collection 
 
-cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "getNFTsInCollection()((uint256,address,string)[])" --rpc-url http://127.0.0.1:8545
+cast call 0x5f474bC674b6Ad4d7b6A5c6429d586D53053DA33 "getNFTsInCollection()((uint256,address,string)[])" --rpc-url http://127.0.0.1:8545

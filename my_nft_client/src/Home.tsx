@@ -7,6 +7,7 @@ import { MetaMaskConnector } from 'wagmi/connectors/metaMask';
 import { publicProvider } from 'wagmi/providers/public'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
 import MarketPlaceContract from './utils/NFTMarketplace.json';
+import TokenContract from './utils/Token.json';
 import { Button, DialogTitle, DialogContent, DialogContentText, Dialog, DialogActions, TextField, Box, Typography, Paper } from '@mui/material';
 import { ethers, ContractFactory, ContractRunner } from 'ethers';
 import { getSigner, getContract } from './ether_utils';
@@ -26,15 +27,17 @@ interface CollectionItem {
 export default function Home() {
 
     const { address, connector, isConnected } = useAccount();
-    const { data: ensName } = useEnsName({ address });
-    const { data: ensAvatar } = useEnsAvatar({ name: ensName });
+    // const { data: ensName } = useEnsName({ address });
+    // const { data: ensAvatar } = useEnsAvatar({ name: ensName });
     const { connect, connectors, error, isLoading, pendingConnector } = useConnect();
     const { disconnect } = useDisconnect();
     const [collection, setCollection] = useState<CollectionItem[]>([]);
     const contractAddress = process.env.REACT_APP_MARKET_PLACE_CONTRACT_ADDRESS as `0x${string}` | undefined;
+    const tokenAddress = process.env.REACT_APP_TOKEN_CONTRACT_ADDRESS as `0x${string}` | undefined;
     const [showModal, setShowModal] = useState<boolean>(false);
     const [collectionName, setCollectionName] = useState<string>("");
     const [marketPlaceContract, setMarketPlaceContract] = useState<any>(null);
+    const [tokenContract, setTokenContract] = useState<any>(null);
     const [signer, setSigner] = useState<any>(null);
     const navigate = useNavigate();
 
@@ -47,8 +50,9 @@ export default function Home() {
 
     const deployCollection = async (name: string) => {
         try {
+            
             let factory = new ContractFactory(NFTCollection.abi, NFTCollection.bytecode, signer);
-            let contract_1 = await factory.deploy("Collection", "1");
+            let contract_1 = await factory.deploy("Collection", "1", tokenAddress);
             await contract_1.waitForDeployment();
             let new_collection_address = await contract_1.getAddress();
             let response_1 = await marketPlaceContract.createCollection(name, new_collection_address);
@@ -70,7 +74,9 @@ export default function Home() {
 
         if (marketPlaceContract) {
             try {
+                console.log("market",marketPlaceContract)
                 const response = await marketPlaceContract.getAllCollections(); // Replace with your contract method
+                console.log("response", response);
                 const formattedCollections: CollectionItem[] = response.map((collection: any) => ({
                     id: collection[0],
                     name: collection[1],
@@ -85,6 +91,20 @@ export default function Home() {
         }
     };
 
+    const distributeNFT = async() => {
+        try{
+            const signer = await getSigner();
+            const token_contract = getContract(tokenAddress, TokenContract.abi, signer);
+            await token_contract.distributeTokens(signer?.address, 1000);
+        }
+        catch(e){
+            console.log(e)
+        }
+       
+
+
+    }
+
     useEffect(() => {
         const init = async () => {
             try {
@@ -93,9 +113,10 @@ export default function Home() {
                     throw new Error("Contract address not found in environment variables");
                 }
                 const market_place_contract = getContract(contractAddress, MarketPlaceContract.abi, signer);
+                const token_contract = getContract(tokenAddress, TokenContract.abi, signer);
                 setSigner(signer);
                 setMarketPlaceContract(market_place_contract);
-
+                setTokenContract(token_contract);
 
             } catch (error) {
                 console.error("Initialization error:", error);
@@ -111,13 +132,15 @@ export default function Home() {
     }, [marketPlaceContract]);
 
     if (isConnected) {
-        console.log("collection details", collection)
+       
         return (
             <div>
                 <div style={{ textAlign: 'center', marginTop: 10 }}>
                     <h1>Connected to {connector?.name}</h1>
                 </div>
                 <Button  onClick={() => disconnect()}>Disconnect</Button>
+                <Button  onClick={() => distributeNFT()}>Get PIX</Button>
+
 
 
                 <div style={{ textAlign: 'center' }}>
